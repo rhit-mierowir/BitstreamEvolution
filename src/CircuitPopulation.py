@@ -79,6 +79,10 @@ class CircuitPopulation:
             self.__run_selection = self.__run_fitness_proportional_selection
         elif config.get_selection_type() == "RANK_PROP_SEL":
             self.__run_selection = self.__run_rank_proportional_selection
+        elif config.get_selection_type() == "FIT_PROP_SEL_NEW":
+            self.__run_selection = self.__run_fit_prop_sel_new
+        elif config.get_selection_type() == "RANK_PROP_SEL_NEW":
+            self.__run_selection = self.__run_rank_prop_sel_new
         elif config.get_selection_type() == "MAP_ELITES":
             self.__run_selection = self.__run_map_elites_selection
         else:
@@ -429,6 +433,7 @@ class CircuitPopulation:
     def __run_single_elite_tournament(self):
         """
         Mutates the hardware of every circuit that is not the current best circuit
+        Deprecated method - can be done using fractional elite selection
         """
         self.__log_event(3, "Tournament Number: {}".format(
             str(self.get_current_epoch())))
@@ -511,6 +516,51 @@ class CircuitPopulation:
                     ckt.copy_hardware_from(rand_elite)
                 ckt.mutate()
 
+    def __run_fit_prop_sel_new(self):
+        '''
+        Copy over n elites into the next generation. Use the circuits' fitnesses to stochastically select the other circuits in the next generation
+        This is different from the old fitness proportional selection as it doesn't use tournaments
+        '''
+
+        #sum the fitness of every circuit
+        fitness_sum = 0
+        for i in range(self.__config.get_population_size()):
+            fitness_sum += self.__circuits[i].get_fitness()
+
+        #calculate the probability a circuit will be selected based off it's fitness
+        ckt_prob = []
+        if fitness_sum > 0:
+            for i in range(self.__config.get_population_size()):
+                ckt_prob[i] = self.__circuits[i].get_fitness() / fitness_sum
+        elif fitness_sum == 0:
+            #give every circuit the same probablity of being selected
+            ckt_prob = [1/self.__config.get_population_size()]*self.__config.get_population_size()
+        else:
+            #fitness sum is negative, this should be impossible
+            pass
+        
+        #auxilliary array so we don't override circuits in the roulette wheel
+        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness()) 
+
+        #copy over elites so they are the same in the next generation
+        for i in range(self.__n_elites):
+            new_circuits[i] = self.__circuits[i]
+
+        #for every non elite, select a random circuit from the roulette wheel
+        for j in range(self.__n_elites, self.__config.get_population_size()):
+            rand_ckt = np.random.choice(self.__circuits, p=ckt_prob)
+            new_circuits[j].copy_hardware_from(self.__circuits[j]) #prevents overriding of circuits used in roulette wheel
+            if self.__rand.uniform(0, 1) <= self.__config.get_crossover_probability():
+                self.__single_point_crossover(rand_ckt, new_circuits[j])
+            else:
+                new_circuits[j].copy_hardware_from(rand_ckt)
+            new_circuits[j].mutate()
+
+        self.__circuits = new_circuits
+        
+
+            
+
     def __run_rank_proportional_selection(self):
         '''
         Compares every circuit in the population to a random elite (chosen proportionally based on each elite's rank).
@@ -572,6 +622,43 @@ class CircuitPopulation:
                     self.__log_event(3, "Cloning:", rand_elite, " ---> ", ckt)
                     ckt.copy_hardware_from(rand_elite)
                 ckt.mutate()
+
+    def __run_rank_prop_sel_new(self):
+        '''
+        Copy over n elites into the next generation. Use the circuits' ranks to stochastically select the other circuits in the next generation
+        This is different from the old rank proportional selection as it doesn't use tournaments
+        '''
+        # can use summation formula since sum of ranks is the sum of natural numbers
+        rank_sum = self.__config.get_population_size() * (self.__config.get_population_size() + 1) / 2
+
+        #calculate the probability a circuit will be selected based off it's fitness
+        ckt_prob = []
+        if rank_sum > 0:
+            for i in range(self.__config.get_population_size()):
+                ckt_prob[i] = self.__circuits[i].get_fitness() / rank_sum
+        else: 
+            #give every circuit the same probablity of being selected
+            ckt_prob = [1/self.__config.get_population_size()]*self.__config.get_population_size()
+        #no way for rank_sum to be 0
+        
+        #auxilliary array so we don't override circuits in the roulette wheel
+        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness()) 
+
+        #copy over elites so they are the same in the next generation
+        for i in range(self.__n_elites):
+            new_circuits[i] = self.__circuits[i]
+
+        #for every non elite, select a random circuit from the roulette wheel
+        for j in range(self.__n_elites, self.__config.get_population_size()):
+            rand_ckt = np.random.choice(self.__circuits, p=ckt_prob)
+            new_circuits[j].copy_hardware_from(self.__circuits[j]) #prevents overriding of circuits used in roulette wheel
+            if self.__rand.uniform(0, 1) <= self.__config.get_crossover_probability():
+                self.__single_point_crossover(rand_ckt, new_circuits[j])
+            else:
+                new_circuits[j].copy_hardware_from(rand_ckt)
+            new_circuits[j].mutate()
+
+        self.__circuits = new_circuits
 
     def __run_fractional_elite_tournament(self):
         """
