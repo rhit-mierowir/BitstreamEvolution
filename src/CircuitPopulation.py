@@ -528,7 +528,7 @@ class CircuitPopulation:
             fitness_sum += self.__circuits[i].get_fitness()
 
         #calculate the probability a circuit will be selected based off it's fitness
-        ckt_prob = []
+        ckt_prob = [0]*self.__config.get_population_size();
         if fitness_sum > 0:
             for i in range(self.__config.get_population_size()):
                 ckt_prob[i] = self.__circuits[i].get_fitness() / fitness_sum
@@ -540,20 +540,18 @@ class CircuitPopulation:
             pass
         
         #auxilliary array so we don't override circuits in the roulette wheel
-        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness()) 
-
-        #copy over elites so they are the same in the next generation
-        for i in range(self.__n_elites):
-            new_circuits[i] = self.__circuits[i]
+        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness())
+        for i in range(self.__config.get_population_size()):
+            new_circuits.add(self.__circuits[i])
 
         #for every non elite, select a random circuit from the roulette wheel
         for j in range(self.__n_elites, self.__config.get_population_size()):
             rand_ckt = np.random.choice(self.__circuits, p=ckt_prob)
-            new_circuits[j].copy_hardware_from(self.__circuits[j]) #prevents overriding of circuits used in roulette wheel
             if self.__rand.uniform(0, 1) <= self.__config.get_crossover_probability():
                 self.__single_point_crossover(rand_ckt, new_circuits[j])
             else:
-                new_circuits[j].copy_hardware_from(rand_ckt)
+            	if new_circuits[j] != rand_ckt:
+                    new_circuits[j].copy_hardware_from(rand_ckt)
             new_circuits[j].mutate()
 
         self.__circuits = new_circuits
@@ -632,30 +630,27 @@ class CircuitPopulation:
         rank_sum = self.__config.get_population_size() * (self.__config.get_population_size() + 1) / 2
 
         #calculate the probability a circuit will be selected based off it's fitness
-        ckt_prob = []
+        ckt_prob = [0]*self.__config.get_population_size();
         if rank_sum > 0:
             for i in range(self.__config.get_population_size()):
-                ckt_prob[i] = self.__circuits[i].get_fitness() / rank_sum
-        else: 
+                ckt_prob[i] = (self.__config.get_population_size() - i) / rank_sum
+        else:
             #give every circuit the same probablity of being selected
             ckt_prob = [1/self.__config.get_population_size()]*self.__config.get_population_size()
-        #no way for rank_sum to be 0
         
         #auxilliary array so we don't override circuits in the roulette wheel
-        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness()) 
-
-        #copy over elites so they are the same in the next generation
-        for i in range(self.__n_elites):
-            new_circuits[i] = self.__circuits[i]
+        new_circuits = SortedKeyList(key=lambda ckt: -ckt.get_fitness())
+        for i in range(self.__config.get_population_size()):
+            new_circuits.add(self.__circuits[i])
 
         #for every non elite, select a random circuit from the roulette wheel
         for j in range(self.__n_elites, self.__config.get_population_size()):
             rand_ckt = np.random.choice(self.__circuits, p=ckt_prob)
-            new_circuits[j].copy_hardware_from(self.__circuits[j]) #prevents overriding of circuits used in roulette wheel
             if self.__rand.uniform(0, 1) <= self.__config.get_crossover_probability():
                 self.__single_point_crossover(rand_ckt, new_circuits[j])
             else:
-                new_circuits[j].copy_hardware_from(rand_ckt)
+            	if new_circuits[j] != rand_ckt:
+                    new_circuits[j].copy_hardware_from(rand_ckt)
             new_circuits[j].mutate()
 
         self.__circuits = new_circuits
