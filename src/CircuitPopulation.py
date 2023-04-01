@@ -561,11 +561,7 @@ class CircuitPopulation:
                     new_circuits[j].copy_hardware_from(rand_ckt)
             new_circuits[j].mutate()
 
-        self.__circuits = new_circuits
-        self.__log_event(4, "Next gneration's circuits: ", new_circuits)
-        
-
-            
+        self.__circuits = new_circuits   
 
     def __run_rank_proportional_selection(self):
         '''
@@ -668,7 +664,6 @@ class CircuitPopulation:
             new_circuits[j].mutate()
 
         self.__circuits = new_circuits
-        self.__log_event(4, "Next gneration's circuits: ", new_circuits)
 
     def __run_fractional_elite_tournament(self):
         """
