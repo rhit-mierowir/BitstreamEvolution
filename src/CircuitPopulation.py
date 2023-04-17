@@ -362,18 +362,20 @@ class CircuitPopulation:
                 self.__log_event(2, "New best found")
 
             self.__logger.log_generation(self, epoch_time)
-            # The circuits that are protected from randomization
-            self.__protected_elites = []
-            self.__run_selection()
 
-            # Remove bottom X% of population to replace with random circuits
-            # (just randomize bitstream of the bottom X%)
-            if self.__config.get_random_injection() > 0:
-                amt = int(self.__config.get_random_injection() * self.__config.get_population_size())
-                circuits_to_randomize = self.__circuits[-amt:]
-                for ckt in circuits_to_randomize:
-                    if ckt not in self.__protected_elites:
-                        ckt.randomize_bits()
+            if self.__config.get_warmup_mode() != "YES":
+                # The circuits that are protected from randomization
+                self.__protected_elites = []
+                self.__run_selection()
+
+                # Remove bottom X% of population to replace with random circuits
+                # (just randomize bitstream of the bottom X%)
+                if self.__config.get_random_injection() > 0:
+                    amt = int(self.__config.get_random_injection() * self.__config.get_population_size())
+                    circuits_to_randomize = self.__circuits[-amt:]
+                    for ckt in circuits_to_randomize:
+                        if ckt not in self.__protected_elites:
+                            ckt.randomize_bits()
 
             self.__write_to_livedata()
             self.__next_epoch()

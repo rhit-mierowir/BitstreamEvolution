@@ -65,6 +65,12 @@ class Config:
 	def get_random_injection(self):
 		return float(self.get_ga_parameters("RANDOM_INJECTION"))
 
+	def get_warmup_mode(self):
+		input = self.get_ga_parameters("WARMUP_MODE")
+		valid_vals = ["YES", "NO"]
+		self.check_valid_value("warmup mode", input, valid_vals)
+		return input
+
 	# RANDOM (randomizes all available bits), CLONE_SEED (copies one seed individual to every circuit), 
 	# CLONE_SEED_MUTATE (clones the seed but also mutates each individual), EXISTING_POPULATION (uses the existing population files)
 	def get_init_mode(self):
