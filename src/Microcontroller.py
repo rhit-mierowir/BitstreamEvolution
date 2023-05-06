@@ -141,6 +141,7 @@ class Microcontroller:
         self.__log_event(2, "Completed writing to data file")
 
 
+    #TODO: finish implementing
     def measure_arduino(self, circuit):
         """
         Tells the arduino to start readin data, collects the data, and records the average of the data
@@ -201,7 +202,7 @@ class Microcontroller:
 
         data_file.close()
 
-
+    #TODO utilize data sampling/data filtering
     def sampling_avg(self, data):
         """
         Returns the average of the passed in data
