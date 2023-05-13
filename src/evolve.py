@@ -13,6 +13,7 @@ from Config import Config
 from Logger import Logger
 from configparser import ConfigParser
 from subprocess import run
+from datetime import datetime
 
 config_parser = ConfigParser()
 config_parser.read("data/config.ini")
@@ -22,22 +23,48 @@ explanation = input("Explain this experiment: ")
 
 logger = Logger(config, explanation)
 mcu = Microcontroller(config, logger)
-population = CircuitPopulation(mcu, config, logger)
 
-population.populate()
-population.evolve()
+num_runs = config.get_num_runs()
+run_folders = []
+runs_dir = config.get_runs_dir()
+if num_runs > 1:
+    # Select folders to store the runs into
+    now = datetime.now()
+    time_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    logger.log_info(1, "Will output " + str(num_runs) + " runs to these folders:")
+    for run in range(0, num_runs):
+        folder = runs_dir.joinpath(time_string + "_NUM_" + str(run))
+        run_folders.append(folder)
+        logger.log_event(folder)
+
+for run in range(0, num_runs):
+    population = CircuitPopulation(mcu, config, logger)
+
+    population.populate()
+    population.evolve()
+
+    if num_runs > 1:
+        # Finished a run, need to store the results, inform the user, and continue
+        logger.log_info(1, "Completed run #" + str(run + 1))
+        # Included: config.ini, the experiment_asc folder, best.asc, and live datas 
+        # (alllivedata, bestlivedata, maplivedata, poplivedata, violinlivedata, waveformlivedata)
+        folder = run_folders[run]
+
 
 logger.log_event(0, "Evolution has completed successfully")
+
+
 
 # SECTION Clean up resources
 
 
-if config.get_simulation_mode() == "FULLY_INTRINSIC":
+# We don't use this anymore; hardware_blink is never touched
+'''if config.get_simulation_mode() == "FULLY_INTRINSIC":
     # Upload a sample bitstream to the FPGA.
     run([
         "iceprog",
         "-d",
         "i:0x0403:0x6010:0",
         "data/hardware_blink.bin"
-    ])
+    ])'''
 

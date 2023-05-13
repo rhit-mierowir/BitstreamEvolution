@@ -25,6 +25,9 @@ class Config:
 	def get_fitness_parameters(self, param):
 		return self.__config_parser.get("FITNESS FUNC PARAMETERS", param)
 
+	def get_autorun_parameters(self, param):
+		return self.__config_parser.get("AUTO RUN PARAMETERS", param)
+
 	# SECTION Getters for GA Parameters.
 	def get_population_size(self):
 		return int(self.get_ga_parameters("POPULATION_SIZE"))
@@ -127,6 +130,16 @@ class Config:
 
 	def get_var_weight(self):
 		return float(self.get_fitness_parameters("VAR_WEIGHT"))
+
+	def get_num_runs(self):
+		# Only non-zero if running a non FULLY_SIM mode
+		if self.get_simulation_mode() == "FULLY_SIM":
+			return 1
+		else:
+			return int(self.get_autorun_parameters("RUNS"))
+
+	def get_runs_dir(self):
+		return Path(self.get_autorun_parameters("RUNS_DIR"))
 
 	# SECTION Getters for logging parameters.
 	def get_asc_directory(self):
