@@ -102,14 +102,7 @@ class Logger:
         self.__log_file = stdout
         self.__experiment_explanation = explanation
 
-        # Ensure the logs exists and have been cleared. Not happy with
-        # this method, but couldn't find a better way to do it.
-        open("workspace/alllivedata.log", "w").close()
-        open("workspace/bestlivedata.log", "w").close()
-        open("workspace/waveformlivedata.log", "w").close()
-        open("workspace/maplivedata.log", "w").close()
-        open("workspace/poplivedata.log", "w").close()
-        open("workspace/violinlivedata.log", "w").close()
+        self.clear_logs()        
 
         # Determine if we need to the to initialize the analysis and
         # if so, do so.
@@ -120,6 +113,16 @@ class Logger:
         # if so.
         if config.get_launch_monitor():
             self.__init_monitor()
+
+    def clear_logs(self):
+        # Ensure the logs exists and have been cleared. Not happy with
+        # this method, but couldn't find a better way to do it.
+        open("workspace/alllivedata.log", "w").close()
+        open("workspace/bestlivedata.log", "w").close()
+        open("workspace/waveformlivedata.log", "w").close()
+        open("workspace/maplivedata.log", "w").close()
+        open("workspace/poplivedata.log", "w").close()
+        open("workspace/violinlivedata.log", "w").close()
 
     def log_generation(self, population, epoch_time):
         self.log_event(2, DOUBLE_HLINE)

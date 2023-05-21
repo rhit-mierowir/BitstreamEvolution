@@ -85,6 +85,9 @@ for run in range(0, num_runs):
             new_path = folder.joinpath(data_path)
             copy_file(str(path), str(new_path))
 
+        # Clear log files for the next run
+        logger.clear_logs()
+
 
 logger.log_event(0, "Evolution has completed successfully")
 
