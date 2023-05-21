@@ -479,6 +479,12 @@ is a list of the options, their description, and their possible values:
 | Serial Buad | The baudrate to use for serial communication | 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, and 115200 | 115200 |
 | Accessed Columns | The columns in each logic tile's bitstream to modify throughout evolution | List of comma seperated numbers from 0 to 53 | 14,15,24,25,40,41|
 
+#### Auto-Run parameters
+| Parameter | Description | Possible Values |
+|-----------|-------------|-----------------|
+| Runs | The number of runs to do | 1+ |
+| Runs Directory | The directory to put run results in; one folder is created in this directory for each run | Any directory (default `./workspace/runs`) |
+
 ### Running
 From the root directory of BitstreamEvolution run:
 
