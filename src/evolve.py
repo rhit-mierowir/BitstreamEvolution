@@ -90,6 +90,10 @@ for run in range(0, num_runs):
 
 
 logger.log_event(0, "Evolution has completed successfully")
+if num_runs > 1:
+    logger.log_event(0, "Runs are in these folders:")
+    for folder in run_folders:
+        logger.log_event(0, folder)
 
 
 
