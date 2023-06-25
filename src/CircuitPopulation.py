@@ -289,7 +289,7 @@ class CircuitPopulation:
         All other generation-specific behavior will be derived from this value
         """
         self.__current_epoch += 1
-        self.__log_event(4, "Starting epoch: " + str(self.__current_epoch))
+        self.__log_event(2, "Starting epoch: " + str(self.__current_epoch))
 
     def __should_continue_evo(self):
         should_continue = True
