@@ -159,7 +159,7 @@ class Config:
 	# Pulse Count, Variance
 	def get_fitness_func(self):
 		input = self.get_ga_parameters("FITNESS_FUNC")
-		valid_vals = ["VARIANCE", "PULSE_COUNT", "COMBINED"]
+		valid_vals = ["VARIANCE", "PULSE_COUNT", "COMBINED", "VAR_PULSE_COUNT"]
 		self.check_valid_value("fitness function", input, valid_vals)
 		return input
 

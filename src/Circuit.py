@@ -304,6 +304,26 @@ class Circuit:
         self.__update_all_live_data()
         return fitness
 
+    def evaluate_var_pulse(self):
+        """
+        Use variance measurements to get an approximation for the pulse fitness
+        """
+        start = time()
+
+        self.__run()
+        self.__microcontroller.measure_signal(self)
+
+        elapsed = time() - start
+        self.__log_event(1,
+            "TIME TAKEN RUNNING AND LOGGING ---------------------- ",
+            elapsed
+        )
+
+        waveform = self.__read_variance_data()
+        fitness = self.__measure_varpulse_fitness(waveform)
+        self.__update_all_live_data()
+        return fitness
+
     def measure_mean_voltage(self):
         """
         Upload and run this circuit and take a mean voltage measure
@@ -415,6 +435,36 @@ class Circuit:
 
         return self.__fitness
 
+    def __measure_varpulse_fitness(self, waveform):
+        """
+        Measures the fitness of this circuit using a pulse-count-esque
+        function that uses waveform data, scaling up the pulses counted
+        to be on the scale of 1 second
+        """
+        num_samples = len(waveform) # We know we take one sample every 10 microseconds
+        # Starting with a simple approach: we'll make the trigger line be the average of the waveform readings
+        # That way we should always expect to see pulses
+        trigger_voltage = 0
+        for entry in waveform:
+            trigger_voltage = trigger_voltage + entry
+        trigger_voltage = trigger_voltage / num_samples
+
+        # Now we'll go through the waveform and find instances where the previous entry was
+        # below the line and the next is above ("rising edge")
+        pulses = 0
+        prev_entry = waveform[0]
+        for i in range(1, len(waveform)):
+            entry = waveform[i]
+            if prev_entry < trigger_voltage and entry >= trigger_voltage:
+                pulses = pulses + 1
+            prev_entry = entry
+
+        # Now that we have the pulses for this many samples, need to calculate how many we'd have in one second
+        sample_us = num_samples * 10
+        target_us = 1_000_000 # 1 million microseconds in one second
+        pulses_in_one_second = (target_us / sample_us) * pulses
+        return self.__calc_pulse_fitness(pulses_in_one_second)
+
     # NOTE Using log files instead of a data buffer in the event of premature termination
     def __measure_pulse_fitness(self):
         """
@@ -435,15 +485,22 @@ class Circuit:
         if pulse_count == 0:
             self.__log_event(2, "NULL DATA FILE. ZEROIZING")
 
+        return self.__calc_pulse_fitness(pulse_count)
+
+    def __calc_pulse_fitness(self, pulses):
+        """
+        Takes in a number of pulses recorded IN ONE SECOND,
+        and calculates the pulse fitness of that circuit
+        """
         desired_freq = self.__config.get_desired_frequency()
         var = self.__config.get_variance_threshold()
-        if pulse_count == desired_freq:
+        if pulses == desired_freq:
             self.__log_event(1, "Unity achieved: {}".format(self))
             self.__fitness = 1
-        elif pulse_count == 0:
+        elif pulses == 0:
             self.__fitness = var
         else:
-            self.__fitness = var + (1.0 / desired_freq - pulse_count)
+            self.__fitness = var + (1.0 / desired_freq - pulses)
         
         return self.__fitness
 

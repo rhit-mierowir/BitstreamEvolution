@@ -316,6 +316,8 @@ class CircuitPopulation:
                 fitness = circuit.evaluate_variance()
             elif func == "COMBINED":
                 fitness = circuit.evaluate_combined()
+            elif func == "VAR_PULSE_COUNT":
+                fitness = circuit.evaluate_var_pulse()
             #fitness = circuit.evaluate_variance()
         return fitness
 
