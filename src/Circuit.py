@@ -496,11 +496,11 @@ class Circuit:
         var = self.__config.get_variance_threshold()
         if pulses == desired_freq:
             self.__log_event(1, "Unity achieved: {}".format(self))
-            self.__fitness = 1
+            self.__fitness = 1000
         elif pulses == 0:
             self.__fitness = var
         else:
-            self.__fitness = var + (1.0 / desired_freq - pulses)
+            self.__fitness = var + (1.0 / abs(desired_freq - pulses))
         
         return self.__fitness
 
