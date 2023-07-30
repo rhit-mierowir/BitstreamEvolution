@@ -460,10 +460,31 @@ class Circuit:
             prev_entry = entry
 
         # Now that we have the pulses for this many samples, need to calculate how many we'd have in one second
-        sample_us = num_samples * 10
+        sample_us = (num_samples + 1) * 10
         target_us = 1_000_000 # 1 million microseconds in one second
         pulses_in_one_second = (target_us / sample_us) * pulses
-        return self.__calc_pulse_fitness(pulses_in_one_second)
+        
+        fit = self.__calc_pulse_fitness(pulses_in_one_second)
+
+        # Output to live data file
+        # First, build the waveform into a single string
+        wfstr = ""
+        for i in range(len(waveform)):
+            wfstr = wfstr + str(waveform[i])
+            if i + 1 < len(waveform):
+                wfstr = wfstr + ","
+
+        with open("workspace/pulselivedata.log", "a") as liveFile:
+            # Format: Real Pulses; Extrapolated Pulses; Fitness; Trigger Voltage; Waveform
+            liveFile.write("{}; {}; {}; {}; {}\n".format(
+                pulses,
+                pulses_in_one_second,
+                fit,
+                trigger_voltage,
+                wfstr
+            ))
+
+        return fit
 
     # NOTE Using log files instead of a data buffer in the event of premature termination
     def __measure_pulse_fitness(self):
@@ -498,9 +519,9 @@ class Circuit:
             self.__log_event(1, "Unity achieved: {}".format(self))
             self.__fitness = 1000
         elif pulses == 0:
-            self.__fitness = var
+            self.__fitness = 0
         else:
-            self.__fitness = var + (1.0 / abs(desired_freq - pulses))
+            self.__fitness = 1.0 / abs(desired_freq - pulses)
         
         return self.__fitness
 
